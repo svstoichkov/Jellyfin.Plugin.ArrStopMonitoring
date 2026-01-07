@@ -1,0 +1,39 @@
+name: Build Plugin
+
+on:
+  push:
+    branches: [ main, master ]
+    paths:
+      - 'Source/**'
+      - '.github/workflows/build.yml'
+  pull_request:
+    branches: [ main, master ]
+    paths:
+      - 'Source/**'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Restore dependencies
+        run: dotnet restore Source/Jellyfin.Plugin.ArrStopMonitoring.csproj
+
+      - name: Build
+        run: dotnet build Source/Jellyfin.Plugin.ArrStopMonitoring.csproj -c Release --no-restore
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: plugin-dll
+          path: Source/bin/Release/net9.0/Jellyfin.Plugin.ArrStopMonitoring.dll
+          retention-days: 30
+

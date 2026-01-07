@@ -1,0 +1,126 @@
+name: Build and Release Plugin
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version number (e.g., 1.0.0.0)'
+        required: true
+        type: string
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Determine version
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            VERSION="${{ github.event.inputs.version }}"
+          else
+            VERSION="${GITHUB_REF#refs/tags/v}"
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Building version: $VERSION"
+
+      - name: Update version in csproj
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          sed -i "s/<AssemblyVersion>.*<\/AssemblyVersion>/<AssemblyVersion>$VERSION<\/AssemblyVersion>/" Source/Jellyfin.Plugin.ArrStopMonitoring.csproj
+          sed -i "s/<FileVersion>.*<\/FileVersion>/<FileVersion>$VERSION<\/FileVersion>/" Source/Jellyfin.Plugin.ArrStopMonitoring.csproj
+
+      - name: Build plugin
+        run: dotnet build Source/Jellyfin.Plugin.ArrStopMonitoring.csproj -c Release
+
+      - name: Create plugin package
+        run: |
+          mkdir -p artifacts
+          cp Source/bin/Release/net9.0/Jellyfin.Plugin.ArrStopMonitoring.dll artifacts/
+          cd artifacts
+          zip -r "../Jellyfin.Plugin.ArrStopMonitoring_${{ steps.version.outputs.version }}.zip" .
+
+      - name: Calculate MD5 checksum
+        id: checksum
+        run: |
+          CHECKSUM=$(md5sum "Jellyfin.Plugin.ArrStopMonitoring_${{ steps.version.outputs.version }}.zip" | awk '{print $1}')
+          echo "checksum=$CHECKSUM" >> $GITHUB_OUTPUT
+          echo "MD5 Checksum: $CHECKSUM"
+
+      - name: Update manifest.json
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          CHECKSUM="${{ steps.checksum.outputs.checksum }}"
+          TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          REPO_URL="https://github.com/${{ github.repository }}"
+          
+          # Update manifest with new version info
+          jq --arg version "$VERSION" \
+             --arg checksum "$CHECKSUM" \
+             --arg timestamp "$TIMESTAMP" \
+             --arg sourceUrl "${REPO_URL}/releases/download/v${VERSION}/Jellyfin.Plugin.ArrStopMonitoring_${VERSION}.zip" \
+             '.[0].versions[0].version = $version |
+              .[0].versions[0].checksum = $checksum |
+              .[0].versions[0].timestamp = $timestamp |
+              .[0].versions[0].sourceUrl = $sourceUrl' \
+             manifest.json > manifest.json.tmp
+          mv manifest.json.tmp manifest.json
+          
+          cat manifest.json
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ steps.version.outputs.version }}
+          name: Release v${{ steps.version.outputs.version }}
+          body: |
+            ## Arr Stop Monitoring Plugin v${{ steps.version.outputs.version }}
+            
+            ### Installation
+            
+            **Option 1: Add Repository (Recommended)**
+            1. Go to Jellyfin Dashboard → Plugins → Repositories
+            2. Click the + button
+            3. Add:
+               - Name: `Arr Stop Monitoring`
+               - URL: `https://raw.githubusercontent.com/${{ github.repository }}/main/manifest.json`
+            4. Go to Catalog and install "Arr Stop Monitoring"
+            
+            **Option 2: Manual Installation**
+            1. Download the zip file below
+            2. Extract to your Jellyfin plugins folder:
+               - Linux: `/var/lib/jellyfin/plugins/ArrStopMonitoring/`
+               - Windows: `C:\ProgramData\Jellyfin\Server\plugins\ArrStopMonitoring\`
+               - Docker: `/config/plugins/ArrStopMonitoring/`
+            3. Restart Jellyfin
+            
+            ### Checksum
+            MD5: `${{ steps.checksum.outputs.checksum }}`
+          files: |
+            Jellyfin.Plugin.ArrStopMonitoring_${{ steps.version.outputs.version }}.zip
+          draft: false
+          prerelease: false
+
+      - name: Commit updated manifest
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add manifest.json
+          git commit -m "Update manifest.json for v${{ steps.version.outputs.version }}" || echo "No changes to commit"
+          git push origin HEAD:main || echo "Could not push (might be a tag-only workflow)"
+

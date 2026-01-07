@@ -13,10 +13,21 @@ Automatically unmonitor media in Radarr and Sonarr after you watch it in Jellyfi
 
 ## Installation
 
+### Via Plugin Repository (Recommended)
+
+1. Go to Jellyfin **Dashboard** → **Plugins** → **Repositories**
+2. Click the **+** button to add a new repository
+3. Enter:
+   - **Name**: `Arr Stop Monitoring`
+   - **URL**: `https://raw.githubusercontent.com/svstoichkov/Jellyfin.Plugin.ArrStopMonitoring/main/manifest.json`
+4. Click **Save**
+5. Go to **Catalog** and find "Arr Stop Monitoring"
+6. Click **Install** and restart Jellyfin
+
 ### Manual Installation
 
-1. Download the latest release `.dll` file
-2. Place it in your Jellyfin plugins directory:
+1. Download the latest release `.zip` file from [Releases](https://github.com/svstoichkov/Jellyfin.Plugin.ArrStopMonitoring/releases)
+2. Extract and place the `.dll` file in your Jellyfin plugins directory:
    - Linux: `/var/lib/jellyfin/plugins/ArrStopMonitoring/`
    - Windows: `C:\ProgramData\Jellyfin\Server\plugins\ArrStopMonitoring\`
    - Docker: `/config/plugins/ArrStopMonitoring/`
@@ -112,6 +123,32 @@ Example log output:
 2. Ensure there's no trailing slash in the URL
 3. Check that the API key is correct
 4. If using Docker, ensure Jellyfin can reach Radarr/Sonarr (use container names or host IP)
+
+## Creating a Release
+
+This project uses GitHub Actions to automatically build and publish releases.
+
+### To create a new release:
+
+1. **Update the version** in `Source/Jellyfin.Plugin.ArrStopMonitoring.csproj` (AssemblyVersion and FileVersion)
+2. **Create and push a git tag**:
+   ```bash
+   git tag v1.0.0.0
+   git push origin v1.0.0.0
+   ```
+3. The GitHub Action will automatically:
+   - Build the plugin
+   - Create a zip package
+   - Calculate the MD5 checksum
+   - Update `manifest.json`
+   - Create a GitHub Release with the package
+
+### Manual release via GitHub Actions:
+
+1. Go to **Actions** → **Build and Release Plugin**
+2. Click **Run workflow**
+3. Enter the version number (e.g., `1.0.0.0`)
+4. Click **Run workflow**
 
 ## License
 

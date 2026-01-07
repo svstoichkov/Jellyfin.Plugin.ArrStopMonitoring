@@ -1,0 +1,22 @@
+[
+  {
+    "guid": "f8e3b2a1-5c4d-4e6f-9a8b-1c2d3e4f5a6b",
+    "name": "Arr Stop Monitoring",
+    "description": "Automatically unmonitor media in Radarr and Sonarr after you watch it in Jellyfin. Stops quality upgrades for content you've already watched.",
+    "overview": "Stop Radarr/Sonarr from upgrading quality on watched content",
+    "owner": "svstoichkov",
+    "category": "General",
+    "imageUrl": "",
+    "versions": [
+      {
+        "version": "1.0.0.0",
+        "changelog": "Initial release\n- Automatic unmonitoring for movies in Radarr\n- Automatic unmonitoring for episodes in Sonarr\n- Smart season completion detection\n- User filtering by username\n- Configurable watch threshold\n- Dry run mode for testing",
+        "targetAbi": "10.9.0.0",
+        "sourceUrl": "https://github.com/svstoichkov/Jellyfin.Plugin.ArrStopMonitoring/releases/download/v1.0.0.0/Jellyfin.Plugin.ArrStopMonitoring_1.0.0.0.zip",
+        "checksum": "",
+        "timestamp": "2026-01-08T00:00:00Z"
+      }
+    ]
+  }
+]
+
