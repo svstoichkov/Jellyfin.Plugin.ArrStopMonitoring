@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Arr Stop Monitoring Configuration</title>
+</head>
+<body>
+    <div id="ArrStopMonitoringConfigPage" data-role="page" class="page type-interior pluginConfigurationPage" data-require="emby-input,emby-button,emby-checkbox,emby-select">
+        <div data-role="content">
+            <div class="content-primary">
+                <form id="ArrStopMonitoringConfigForm">
+                    
+                    <!-- Radarr Settings -->
+                    <div class="verticalSection">
+                        <div class="sectionTitleContainer flex align-items-center">
+                            <h2 class="sectionTitle">Radarr Settings (Movies)</h2>
+                        </div>
+                        
+                        <div class="checkboxContainer checkboxContainer-withDescription">
+                            <label class="emby-checkbox-label">
+                                <input type="checkbox" is="emby-checkbox" id="RadarrEnabled" />
+                                <span>Enable Radarr Integration</span>
+                            </label>
+                            <div class="fieldDescription checkboxFieldDescription">
+                                When enabled, movies will be unmonitored in Radarr after watching.
+                            </div>
+                        </div>
+
+                        <div class="inputContainer">
+                            <label class="inputLabel inputLabelUnfocused" for="RadarrUrl">Radarr URL</label>
+                            <input type="text" is="emby-input" id="RadarrUrl" placeholder="http://localhost:7878" />
+                            <div class="fieldDescription">
+                                The URL of your Radarr server. Include protocol and port, no trailing slash.
+                            </div>
+                        </div>
+
+                        <div class="inputContainer">
+                            <label class="inputLabel inputLabelUnfocused" for="RadarrApiKey">Radarr API Key</label>
+                            <input type="password" is="emby-input" id="RadarrApiKey" />
+                            <div class="fieldDescription">
+                                Found in Radarr → Settings → General → Security → API Key
+                            </div>
+                        </div>
+
+                        <div class="inputContainer">
+                            <button is="emby-button" type="button" id="TestRadarr" class="raised button-alt">
+                                <span>Test Radarr Connection</span>
+                            </button>
+                            <span id="RadarrTestResult" style="margin-left: 10px;"></span>
+                        </div>
+                    </div>
+
+                    <!-- Sonarr Settings -->
+                    <div class="verticalSection">
+                        <div class="sectionTitleContainer flex align-items-center">
+                            <h2 class="sectionTitle">Sonarr Settings (TV Shows)</h2>
+                        </div>
+
+                        <div class="checkboxContainer checkboxContainer-withDescription">
+                            <label class="emby-checkbox-label">
+                                <input type="checkbox" is="emby-checkbox" id="SonarrEnabled" />
+                                <span>Enable Sonarr Integration</span>
+                            </label>
+                            <div class="fieldDescription checkboxFieldDescription">
+                                When enabled, episodes will be unmonitored in Sonarr after watching.
+                            </div>
+                        </div>
+
+                        <div class="inputContainer">
+                            <label class="inputLabel inputLabelUnfocused" for="SonarrUrl">Sonarr URL</label>
+                            <input type="text" is="emby-input" id="SonarrUrl" placeholder="http://localhost:8989" />
+                            <div class="fieldDescription">
+                                The URL of your Sonarr server. Include protocol and port, no trailing slash.
+                            </div>
+                        </div>
+
+                        <div class="inputContainer">
+                            <label class="inputLabel inputLabelUnfocused" for="SonarrApiKey">Sonarr API Key</label>
+                            <input type="password" is="emby-input" id="SonarrApiKey" />
+                            <div class="fieldDescription">
+                                Found in Sonarr → Settings → General → Security → API Key
+                            </div>
+                        </div>
+
+                        <div class="checkboxContainer checkboxContainer-withDescription">
+                            <label class="emby-checkbox-label">
+                                <input type="checkbox" is="emby-checkbox" id="AutoUnmonitorCompletedSeasons" />
+                                <span>Auto-unmonitor completed seasons</span>
+                            </label>
+                            <div class="fieldDescription checkboxFieldDescription">
+                                When all episodes in a season have been watched, automatically unmonitor the entire season.
+                            </div>
+                        </div>
+
+                        <div class="inputContainer">
+                            <button is="emby-button" type="button" id="TestSonarr" class="raised button-alt">
+                                <span>Test Sonarr Connection</span>
+                            </button>
+                            <span id="SonarrTestResult" style="margin-left: 10px;"></span>
+                        </div>
+                    </div>
+
+                    <!-- General Settings -->
+                    <div class="verticalSection">
+                        <div class="sectionTitleContainer flex align-items-center">
+                            <h2 class="sectionTitle">General Settings</h2>
+                        </div>
+
+                        <div class="inputContainer">
+                            <label class="inputLabel inputLabelUnfocused" for="WatchThreshold">Watch Threshold (%)</label>
+                            <input type="number" is="emby-input" id="WatchThreshold" min="1" max="100" value="90" />
+                            <div class="fieldDescription">
+                                Percentage of media that must be watched to trigger unmonitoring. Default: 90%
+                            </div>
+                        </div>
+
+                        <div class="inputContainer">
+                            <label class="inputLabel inputLabelUnfocused" for="TrackedUsernames">Tracked Usernames</label>
+                            <input type="text" is="emby-input" id="TrackedUsernames" placeholder="Leave empty to track all users" />
+                            <div class="fieldDescription">
+                                Comma-separated list of Jellyfin usernames to track (case-insensitive). 
+                                Example: <code>john, Jane, admin</code>. Leave empty to track all users.
+                            </div>
+                        </div>
+
+                        <div class="checkboxContainer checkboxContainer-withDescription">
+                            <label class="emby-checkbox-label">
+                                <input type="checkbox" is="emby-checkbox" id="DryRun" />
+                                <span>Dry Run Mode</span>
+                            </label>
+                            <div class="fieldDescription checkboxFieldDescription">
+                                When enabled, actions are logged but not executed. Useful for testing.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="verticalSection">
+                        <button is="emby-button" type="submit" class="raised button-submit block">
+                            <span>Save</span>
+                        </button>
+                    </div>
+
+                </form>
+            </div>
+        </div>
+
+        <script type="text/javascript">
+            var ArrStopMonitoringConfig = {
+                pluginUniqueId: 'f8e3b2a1-5c4d-4e6f-9a8b-1c2d3e4f5a6b'
+            };
+
+            // Helper function to call plugin API endpoints
+            function callPluginApi(endpoint, params) {
+                var serverUrl = ApiClient.serverAddress();
+                var queryString = Object.keys(params)
+                    .map(function(key) { return encodeURIComponent(key) + '=' + encodeURIComponent(params[key]); })
+                    .join('&');
+                var url = serverUrl + '/Plugins/ArrStopMonitoring/' + endpoint + '?' + queryString;
+                
+                return fetch(url, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': 'application/json',
+                        'Authorization': 'MediaBrowser Token="' + ApiClient.accessToken() + '"'
+                    }
+                }).then(function(response) {
+                    if (!response.ok) {
+                        throw new Error('HTTP ' + response.status + ' ' + response.statusText);
+                    }
+                    return response.json();
+                });
+            }
+
+            document.querySelector('#ArrStopMonitoringConfigPage')
+                .addEventListener('pageshow', function () {
+                    Dashboard.showLoadingMsg();
+                    ApiClient.getPluginConfiguration(ArrStopMonitoringConfig.pluginUniqueId).then(function (config) {
+                        document.querySelector('#RadarrEnabled').checked = config.RadarrEnabled;
+                        document.querySelector('#RadarrUrl').value = config.RadarrUrl || '';
+                        document.querySelector('#RadarrApiKey').value = config.RadarrApiKey || '';
+                        
+                        document.querySelector('#SonarrEnabled').checked = config.SonarrEnabled;
+                        document.querySelector('#SonarrUrl').value = config.SonarrUrl || '';
+                        document.querySelector('#SonarrApiKey').value = config.SonarrApiKey || '';
+                        document.querySelector('#AutoUnmonitorCompletedSeasons').checked = config.AutoUnmonitorCompletedSeasons;
+                        
+                        document.querySelector('#WatchThreshold').value = Math.round((config.WatchThreshold || 0.9) * 100);
+                        document.querySelector('#TrackedUsernames').value = (config.TrackedUsernames || []).join(', ');
+                        document.querySelector('#DryRun').checked = config.DryRun;
+                        
+                        Dashboard.hideLoadingMsg();
+                    });
+                });
+
+            document.querySelector('#ArrStopMonitoringConfigForm')
+                .addEventListener('submit', function (e) {
+                    e.preventDefault();
+                    Dashboard.showLoadingMsg();
+                    
+                    ApiClient.getPluginConfiguration(ArrStopMonitoringConfig.pluginUniqueId).then(function (config) {
+                        config.RadarrEnabled = document.querySelector('#RadarrEnabled').checked;
+                        config.RadarrUrl = document.querySelector('#RadarrUrl').value.replace(/\/+$/, '');
+                        config.RadarrApiKey = document.querySelector('#RadarrApiKey').value;
+                        
+                        config.SonarrEnabled = document.querySelector('#SonarrEnabled').checked;
+                        config.SonarrUrl = document.querySelector('#SonarrUrl').value.replace(/\/+$/, '');
+                        config.SonarrApiKey = document.querySelector('#SonarrApiKey').value;
+                        config.AutoUnmonitorCompletedSeasons = document.querySelector('#AutoUnmonitorCompletedSeasons').checked;
+                        
+                        config.WatchThreshold = parseInt(document.querySelector('#WatchThreshold').value, 10) / 100;
+                        
+                        var usernamesValue = document.querySelector('#TrackedUsernames').value.trim();
+                        config.TrackedUsernames = usernamesValue 
+                            ? usernamesValue.split(',').map(function(s) { return s.trim(); }).filter(function(s) { return s; })
+                            : [];
+                        
+                        config.DryRun = document.querySelector('#DryRun').checked;
+
+                        ApiClient.updatePluginConfiguration(ArrStopMonitoringConfig.pluginUniqueId, config).then(function () {
+                            Dashboard.processPluginConfigurationUpdateResult();
+                        });
+                    });
+                    
+                    return false;
+                });
+
+            // Test Radarr connection via server-side API
+            document.querySelector('#TestRadarr').addEventListener('click', function() {
+                var resultSpan = document.querySelector('#RadarrTestResult');
+                resultSpan.textContent = 'Testing...';
+                resultSpan.style.color = '';
+                
+                var url = document.querySelector('#RadarrUrl').value.replace(/\/+$/, '');
+                var apiKey = document.querySelector('#RadarrApiKey').value;
+                
+                if (!url || !apiKey) {
+                    resultSpan.textContent = '✗ Please enter URL and API key';
+                    resultSpan.style.color = 'red';
+                    return;
+                }
+                
+                callPluginApi('TestRadarr', { url: url, apiKey: apiKey })
+                    .then(function(response) {
+                        if (response.Success) {
+                            resultSpan.textContent = '✓ ' + response.Message;
+                            resultSpan.style.color = 'green';
+                        } else {
+                            resultSpan.textContent = '✗ ' + response.Message;
+                            resultSpan.style.color = 'red';
+                        }
+                    })
+                    .catch(function(e) {
+                        resultSpan.textContent = '✗ ' + e.message;
+                        resultSpan.style.color = 'red';
+                    });
+            });
+
+            // Test Sonarr connection via server-side API
+            document.querySelector('#TestSonarr').addEventListener('click', function() {
+                var resultSpan = document.querySelector('#SonarrTestResult');
+                resultSpan.textContent = 'Testing...';
+                resultSpan.style.color = '';
+                
+                var url = document.querySelector('#SonarrUrl').value.replace(/\/+$/, '');
+                var apiKey = document.querySelector('#SonarrApiKey').value;
+                
+                if (!url || !apiKey) {
+                    resultSpan.textContent = '✗ Please enter URL and API key';
+                    resultSpan.style.color = 'red';
+                    return;
+                }
+                
+                callPluginApi('TestSonarr', { url: url, apiKey: apiKey })
+                    .then(function(response) {
+                        if (response.Success) {
+                            resultSpan.textContent = '✓ ' + response.Message;
+                            resultSpan.style.color = 'green';
+                        } else {
+                            resultSpan.textContent = '✗ ' + response.Message;
+                            resultSpan.style.color = 'red';
+                        }
+                    })
+                    .catch(function(e) {
+                        resultSpan.textContent = '✗ ' + e.message;
+                        resultSpan.style.color = 'red';
+                    });
+            });
+        </script>
+    </div>
+</body>
+</html>
+
+
