@@ -100,6 +100,33 @@
                         </div>
                     </div>
 
+                    <!-- Trigger Settings -->
+                    <div class="verticalSection">
+                        <div class="sectionTitleContainer flex align-items-center">
+                            <h2 class="sectionTitle">Trigger Settings</h2>
+                        </div>
+
+                        <div class="checkboxContainer checkboxContainer-withDescription">
+                            <label class="emby-checkbox-label">
+                                <input type="checkbox" is="emby-checkbox" id="TriggerOnPlayback" />
+                                <span>Trigger on Playback</span>
+                            </label>
+                            <div class="fieldDescription checkboxFieldDescription">
+                                Unmonitor media when it is watched through normal playback (based on watch threshold).
+                            </div>
+                        </div>
+
+                        <div class="checkboxContainer checkboxContainer-withDescription">
+                            <label class="emby-checkbox-label">
+                                <input type="checkbox" is="emby-checkbox" id="TriggerOnManuallyMarkedWatched" />
+                                <span>Trigger on Manually Marked as Watched</span>
+                            </label>
+                            <div class="fieldDescription checkboxFieldDescription">
+                                Unmonitor media when it is manually marked as watched using the checkmark in Jellyfin.
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- General Settings -->
                     <div class="verticalSection">
                         <div class="sectionTitleContainer flex align-items-center">
@@ -110,7 +137,7 @@
                             <label class="inputLabel inputLabelUnfocused" for="WatchThreshold">Watch Threshold (%)</label>
                             <input type="number" is="emby-input" id="WatchThreshold" min="1" max="100" value="90" />
                             <div class="fieldDescription">
-                                Percentage of media that must be watched to trigger unmonitoring. Default: 90%
+                                Percentage of media that must be watched to trigger unmonitoring (for playback trigger). Default: 90%
                             </div>
                         </div>
 
@@ -184,6 +211,9 @@
                         document.querySelector('#SonarrApiKey').value = config.SonarrApiKey || '';
                         document.querySelector('#AutoUnmonitorCompletedSeasons').checked = config.AutoUnmonitorCompletedSeasons;
                         
+                        document.querySelector('#TriggerOnPlayback').checked = config.TriggerOnPlayback !== false;
+                        document.querySelector('#TriggerOnManuallyMarkedWatched').checked = config.TriggerOnManuallyMarkedWatched;
+                        
                         document.querySelector('#WatchThreshold').value = Math.round((config.WatchThreshold || 0.9) * 100);
                         document.querySelector('#TrackedUsernames').value = (config.TrackedUsernames || []).join(', ');
                         document.querySelector('#DryRun').checked = config.DryRun;
@@ -206,6 +236,9 @@
                         config.SonarrUrl = document.querySelector('#SonarrUrl').value.replace(/\/+$/, '');
                         config.SonarrApiKey = document.querySelector('#SonarrApiKey').value;
                         config.AutoUnmonitorCompletedSeasons = document.querySelector('#AutoUnmonitorCompletedSeasons').checked;
+                        
+                        config.TriggerOnPlayback = document.querySelector('#TriggerOnPlayback').checked;
+                        config.TriggerOnManuallyMarkedWatched = document.querySelector('#TriggerOnManuallyMarkedWatched').checked;
                         
                         config.WatchThreshold = parseInt(document.querySelector('#WatchThreshold').value, 10) / 100;
                         

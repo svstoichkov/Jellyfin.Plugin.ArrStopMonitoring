@@ -25,6 +25,9 @@ public class PluginConfiguration : BasePluginConfiguration
         TrackedUsernames = Array.Empty<string>();
         WatchThreshold = 0.90;
         DryRun = false;
+
+        TriggerOnPlayback = true;
+        TriggerOnManuallyMarkedWatched = false;
     }
 
     // ==================== Radarr Settings ====================
@@ -86,6 +89,18 @@ public class PluginConfiguration : BasePluginConfiguration
     /// When enabled, actions are logged but not executed.
     /// </summary>
     public bool DryRun { get; set; }
+
+    // ==================== Trigger Settings ====================
+
+    /// <summary>
+    /// Gets or sets a value indicating whether to trigger unmonitoring when media is watched via playback.
+    /// </summary>
+    public bool TriggerOnPlayback { get; set; }
+
+    /// <summary>
+    /// Gets or sets a value indicating whether to trigger unmonitoring when media is manually marked as watched.
+    /// </summary>
+    public bool TriggerOnManuallyMarkedWatched { get; set; }
 }
 
 

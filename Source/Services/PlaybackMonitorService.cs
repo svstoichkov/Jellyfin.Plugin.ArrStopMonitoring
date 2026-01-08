@@ -19,6 +19,8 @@ namespace Jellyfin.Plugin.ArrStopMonitoring.Services;
 public class PlaybackMonitorService : IHostedService, IDisposable
 {
     private readonly ISessionManager _sessionManager;
+    private readonly IUserDataManager _userDataManager;
+    private readonly IUserManager _userManager;
     private readonly ILogger<PlaybackMonitorService> _logger;
     private readonly RadarrService _radarrService;
     private readonly SonarrService _sonarrService;
@@ -28,14 +30,20 @@ public class PlaybackMonitorService : IHostedService, IDisposable
     /// Initializes a new instance of the <see cref="PlaybackMonitorService"/> class.
     /// </summary>
     /// <param name="sessionManager">The session manager.</param>
+    /// <param name="userDataManager">The user data manager.</param>
+    /// <param name="userManager">The user manager.</param>
     /// <param name="loggerFactory">The logger factory.</param>
     /// <param name="httpClientFactory">The HTTP client factory.</param>
     public PlaybackMonitorService(
         ISessionManager sessionManager,
+        IUserDataManager userDataManager,
+        IUserManager userManager,
         ILoggerFactory loggerFactory,
         IHttpClientFactory httpClientFactory)
     {
         _sessionManager = sessionManager;
+        _userDataManager = userDataManager;
+        _userManager = userManager;
         _logger = loggerFactory.CreateLogger<PlaybackMonitorService>();
         _httpClient = httpClientFactory.CreateClient();
         _radarrService = new RadarrService(_httpClient, loggerFactory.CreateLogger<RadarrService>());
@@ -46,7 +54,8 @@ public class PlaybackMonitorService : IHostedService, IDisposable
     public Task StartAsync(CancellationToken cancellationToken)
     {
         _sessionManager.PlaybackStopped += OnPlaybackStopped;
-        _logger.LogInformation("Arr Stop Monitoring plugin started - listening for playback events");
+        _userDataManager.UserDataSaved += OnUserDataSaved;
+        _logger.LogInformation("Arr Stop Monitoring plugin started - listening for playback and user data events");
         return Task.CompletedTask;
     }
 
@@ -54,6 +63,7 @@ public class PlaybackMonitorService : IHostedService, IDisposable
     public Task StopAsync(CancellationToken cancellationToken)
     {
         _sessionManager.PlaybackStopped -= OnPlaybackStopped;
+        _userDataManager.UserDataSaved -= OnUserDataSaved;
         _logger.LogInformation("Arr Stop Monitoring plugin stopped");
         return Task.CompletedTask;
     }
@@ -70,12 +80,31 @@ public class PlaybackMonitorService : IHostedService, IDisposable
         }
     }
 
+    private async void OnUserDataSaved(object? sender, UserDataSaveEventArgs e)
+    {
+        try
+        {
+            await HandleUserDataSavedAsync(e).ConfigureAwait(false);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Error handling user data saved event");
+        }
+    }
+
     private async Task HandlePlaybackStoppedAsync(PlaybackStopEventArgs e)
     {
         var config = Plugin.Instance?.Configuration;
         if (config == null)
         {
             _logger.LogWarning("Plugin configuration is null, skipping playback event");
+            return;
+        }
+
+        // Check if playback trigger is enabled
+        if (!config.TriggerOnPlayback)
+        {
+            _logger.LogDebug("Playback trigger is disabled, skipping");
             return;
         }
 
@@ -116,6 +145,73 @@ public class PlaybackMonitorService : IHostedService, IDisposable
             _logger.LogDebug("No item in playback event, skipping");
             return;
         }
+
+        // Handle Movies → Radarr
+        if (item is Movie movie && config.RadarrEnabled)
+        {
+            await HandleMovieWatchedAsync(movie, config.DryRun).ConfigureAwait(false);
+        }
+        // Handle Episodes → Sonarr
+        else if (item is Episode episode && config.SonarrEnabled)
+        {
+            await HandleEpisodeWatchedAsync(episode, config.DryRun, config.AutoUnmonitorCompletedSeasons)
+                .ConfigureAwait(false);
+        }
+    }
+
+    private async Task HandleUserDataSavedAsync(UserDataSaveEventArgs e)
+    {
+        var config = Plugin.Instance?.Configuration;
+        if (config == null)
+        {
+            _logger.LogWarning("Plugin configuration is null, skipping user data event");
+            return;
+        }
+
+        // Check if manual watch marking trigger is enabled
+        if (!config.TriggerOnManuallyMarkedWatched)
+        {
+            return;
+        }
+
+        // Only process when item is marked as played (not playback progress updates)
+        if (e.SaveReason != UserDataSaveReason.TogglePlayed)
+        {
+            return;
+        }
+
+        // Check if the item was actually marked as played (not unplayed)
+        if (e.UserData == null || !e.UserData.Played)
+        {
+            _logger.LogDebug("Item was marked as unplayed, skipping");
+            return;
+        }
+
+        // Get the user to check if they should be tracked
+        var user = _userManager.GetUserById(e.UserId);
+        if (user == null)
+        {
+            _logger.LogDebug("User not found for ID {UserId}, skipping", e.UserId);
+            return;
+        }
+
+        if (!ShouldTrackUser(user.Username, config.TrackedUsernames))
+        {
+            _logger.LogDebug("User '{Username}' is not tracked, skipping", user.Username);
+            return;
+        }
+
+        var item = e.Item;
+        if (item == null)
+        {
+            _logger.LogDebug("No item in user data event, skipping");
+            return;
+        }
+
+        _logger.LogDebug(
+            "Processing manually marked as watched event for user '{Username}' - Item: '{Name}'",
+            user.Username,
+            item.Name);
 
         // Handle Movies → Radarr
         if (item is Movie movie && config.RadarrEnabled)
@@ -276,6 +372,7 @@ public class PlaybackMonitorService : IHostedService, IDisposable
     public void Dispose()
     {
         _sessionManager.PlaybackStopped -= OnPlaybackStopped;
+        _userDataManager.UserDataSaved -= OnUserDataSaved;
         GC.SuppressFinalize(this);
     }
 }
