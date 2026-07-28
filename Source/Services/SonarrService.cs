@@ -190,32 +190,33 @@ public class SonarrService
         // Get fresh episode data
         var episodes = await GetEpisodesForSeriesAsync(series.Id, sonarrUrl, apiKey);
 
-        // Filter to episodes in this season that have files (aired and downloaded)
+        // Include every episode Sonarr knows about so monitored future episodes keep
+        // an ongoing season monitored.
         var seasonEpisodes = episodes
-            .Where(e => e.SeasonNumber == seasonNumber && e.HasFile)
+            .Where(e => e.SeasonNumber == seasonNumber)
             .ToList();
 
         if (seasonEpisodes.Count == 0)
         {
-            _logger.LogDebug("No downloaded episodes found for season {Season}", seasonNumber);
+            _logger.LogDebug("No episodes found for season {Season}", seasonNumber);
             return;
         }
 
-        // Check if all downloaded episodes in the season are unmonitored
-        var allUnmonitored = seasonEpisodes.All(e => !e.Monitored);
+        var monitoredEpisodeCount = seasonEpisodes.Count(e => e.Monitored);
 
-        if (!allUnmonitored)
+        if (monitoredEpisodeCount > 0)
         {
-            _logger.LogDebug("Not all episodes in season {Season} are unmonitored yet ({Unmonitored}/{Total})",
+            _logger.LogDebug(
+                "Season {Season} is not complete yet ({Unmonitored}/{Total} episodes unmonitored)",
                 seasonNumber,
-                seasonEpisodes.Count(e => !e.Monitored),
+                seasonEpisodes.Count - monitoredEpisodeCount,
                 seasonEpisodes.Count);
             return;
         }
 
-        // All episodes are unmonitored - unmonitor the season
+        // Every known episode is unmonitored - unmonitor the season
         _logger.LogInformation(
-            "All {Count} downloaded episodes in '{Series}' Season {Season} are unmonitored - unmonitoring season",
+            "All {Count} episodes in '{Series}' Season {Season} are unmonitored - unmonitoring season",
             seasonEpisodes.Count, series.Title, seasonNumber);
 
         await UnmonitorSeasonAsync(series, seasonNumber, sonarrUrl, apiKey);
