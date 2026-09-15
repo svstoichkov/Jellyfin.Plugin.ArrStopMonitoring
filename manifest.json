@@ -9,12 +9,12 @@
     "imageUrl": "",
     "versions": [
       {
-        "version": "1.0.0.0",
+        "version": "2.0.0.0",
         "changelog": "Initial release\n- Automatic unmonitoring for movies in Radarr\n- Automatic unmonitoring for episodes in Sonarr\n- Smart season completion detection\n- User filtering by username\n- Configurable watch threshold\n- Dry run mode for testing",
-        "targetAbi": "10.9.0.0",
-        "sourceUrl": "https://github.com/svstoichkov/Jellyfin.Plugin.ArrStopMonitoring/releases/download/v1.0.0.0/Jellyfin.Plugin.ArrStopMonitoring_1.0.0.0.zip",
-        "checksum": "1299c28d93ea57c140b10accf0081584",
-        "timestamp": "2026-01-08T00:07:43Z"
+        "targetAbi": "12.1.0.0",
+        "sourceUrl": "https://github.com/svstoichkov/Jellyfin.Plugin.ArrStopMonitoring/releases/download/v2.0.0.0/Jellyfin.Plugin.ArrStopMonitoring_2.0.0.0.zip",
+        "checksum": "8dd48743143f2051f5dc363fbb70e71e",
+        "timestamp": "2026-09-15T11:20:29Z"
       }
     ]
   }
