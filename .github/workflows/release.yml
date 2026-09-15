@@ -26,7 +26,7 @@ jobs:
       - name: Setup .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '9.0.x'
+          dotnet-version: '10.0.x'
 
       - name: Determine version
         id: version
@@ -51,7 +51,7 @@ jobs:
       - name: Create plugin package
         run: |
           mkdir -p artifacts
-          cp Source/bin/Release/net9.0/Jellyfin.Plugin.ArrStopMonitoring.dll artifacts/
+          cp Source/bin/Release/net10.0/Jellyfin.Plugin.ArrStopMonitoring.dll artifacts/
           cd artifacts
           zip -r "../Jellyfin.Plugin.ArrStopMonitoring_${{ steps.version.outputs.version }}.zip" .
 
@@ -74,7 +74,8 @@ jobs:
              --arg checksum "$CHECKSUM" \
              --arg timestamp "$TIMESTAMP" \
              --arg sourceUrl "${REPO_URL}/releases/download/v${VERSION}/Jellyfin.Plugin.ArrStopMonitoring_${VERSION}.zip" \
-             '.[0].versions[0].version = $version |
+             '.[0].versions[0].targetAbi = "12.1.0.0" |
+              .[0].versions[0].version = $version |
               .[0].versions[0].checksum = $checksum |
               .[0].versions[0].timestamp = $timestamp |
               .[0].versions[0].sourceUrl = $sourceUrl' \

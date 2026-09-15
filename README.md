@@ -1,3 +1,9 @@
+## Compatibility
+
+The current source targets Jellyfin 12.1 and requires the .NET 10 SDK to build. Plugin version 1.1.0.0 is for Jellyfin 12.1; retain the previous plugin binary for rollback to 10.11.
+
+Build with `dotnet build Source/Jellyfin.Plugin.ArrStopMonitoring.csproj -c Release`. The DLL is in `Source/bin/Release/net10.0/`. Published catalogue entries remain unchanged until a release is actually published.
+
 # Jellyfin *Arr Stop Monitoring Plugin
 
 Automatically unmonitor media in Radarr and Sonarr after you watch it in Jellyfin. This stops quality upgrades for content you've already watched.
